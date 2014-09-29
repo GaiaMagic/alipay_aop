@@ -9,7 +9,7 @@ Gem::Specification.new do |spec|
   spec.authors       = ["Hung Yuhei", "Shou Ya"]
   spec.email         = ["kongruxi@gmail.com", "shouyatf@gmail.com"]
   spec.description   = %q{An unofficial API wrapper for Alipay Service Platform}
-  spec.summary       = %q{}
+  spec.summary       = %q{An unofficial API wrapper for Alipay Service Platform}
   spec.homepage      = ""
   spec.license       = "MIT"
 

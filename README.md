@@ -1,6 +1,6 @@
-# AlipayAop
+# AlipayAOP
 
-TODO: Write a gem description
+Alipay AOP is an unofficial API wrapper for Alipay Service Platform.
 
 ## Installation
 
@@ -18,7 +18,26 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+### 1. create a client
+```ruby
+include AlipayAOP
+
+server_key = ServerKey.create_from_file('xxx_public.pem')
+client_key = ServerKey.create_from_file('xxx_private.pem')
+
+client = Client.new(:server_key => server_key,
+                    :client_key => client_key,
+					:app_id     => '2014070100171523')
+```
+
+### 2. register gateway
+
+TODO
+
+### 3. invoke Alipay OpenAPI(s)
+
+TODO
+
 
 ## Contributing
 
