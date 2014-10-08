@@ -1,6 +1,6 @@
 # AlipayAOP
 
-Alipay AOP is an unofficial API wrapper for Alipay Service Platform.
+Alipay AOP is an unofficial API wrapper for Alipay Open Platform.
 
 ## Installation
 

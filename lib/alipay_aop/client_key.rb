@@ -22,7 +22,8 @@ module AlipayAOP
     end
 
     def verify(message, signature)
-      @public_key.sign(@digest)
+      signature_decoded = Base64.decode64(signature)
+      @public_key.verify(@digest, signature_decoded, message)
     end
 
   end

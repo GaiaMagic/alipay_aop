@@ -34,6 +34,9 @@ module AlipayAOP
       validate_client
     end
 
+    def configure
+      yield self if block_given?
+    end
 
     def request(method, body = {})
       biz_content = body.to_json.to_s
@@ -52,6 +55,14 @@ module AlipayAOP
 
       response
     end
+
+    def create(path, options)
+      alipay_class = class_from_path(path)
+      alipay_class.new(options).tap do |data|
+        data.client = self
+      end
+    end
+
 
 
     private
@@ -76,7 +87,7 @@ module AlipayAOP
         :method => method,
       }
 
-      message = params.to_a.sort.map { |(k,v)| "#{k.to_s}=#{v.to_s}" }
+      message = params.to_a.sort.map {|(k,v)| "#{k.to_s}=#{v.to_s}"}
                                 .join('&')
 
       @client_key.sign(message)
@@ -90,9 +101,10 @@ module AlipayAOP
        :client_key,
        :server_key
       ].all {|x| instance_variable_present?(x) } or
-        raise 'Some parameter(s) is required but not supplied.'
+        raise AlipayAOP::Error.new('Some parameter(s) ' +
+                                   'is required but not ' +
+                                   'supplied.')
     end
-
 
   end
 end
