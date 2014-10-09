@@ -20,23 +20,17 @@ module AlipayAOP
     end
 
     def verifygw_handler
-      if request.app_id == client.app_id
-
-      else
-        # not verified
-      end
+      render :verifygw if request.app_id == client.app_id
+      head :bad_request
     end
 
     def event_handler
-
     end
 
     def text_handler
-
     end
 
     def image_handler
-
     end
 
     attr_accessor :client
@@ -44,6 +38,7 @@ module AlipayAOP
     def client
       @client ||= AlipayAOP.client
     end
+
 
     private
 

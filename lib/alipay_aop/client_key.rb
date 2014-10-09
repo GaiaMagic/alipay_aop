@@ -3,6 +3,10 @@ require 'openssl'
 
 module AlipayAOP
   class ClientKey
+    attr_accessor :public_key,
+                  :private_key,
+                  :digest
+
     def self.create_from_file(private_key_file)
       Keypair.new(File.read(private_key_file))
     end
