@@ -1,15 +1,21 @@
 require 'ostruct'
+require 'forwardable'
 
 require 'alipay_aop/client'
 
 module AlipayAOP
   class Api
+    include Forwardable
+
+    API_GATEWAY  = 'https://openapi.alipay.com/gateway.do'
+    BLOB_GATEWAY = 'https://openfile.alipay.com/chat/multimedia.do'
+
     attr_reader :private_key,
                 :server_key,
                 :client,
                 :app_id
 
-    API_GATEWAY = 'https://openapi.alipay.com/gateway.do'
+    def_delegator :client, :request, :query
 
 
     def initialize(app_id, private_key_file, alipay_public_key_file)
@@ -37,28 +43,30 @@ module AlipayAOP
       query('alipay.mobile.public.message.custom.send', message.to_json)
     end
 
+    alias_method :send_message, :custom_message
+
     def broadcast(message)
       query('alipay.mobile.public.message.total.send', message.to_json)
     end
 
     def followers
       # paging for >10,000 followers is not handled yet
-      resp = query('alipay.mobile.public.follow.list')
-      return resp unless resp.code == 200
-      resp.data['user_id_list']['string'].map {|x| User.from_id(x) }
+      response = query('alipay.mobile.public.follow.list')
+      return response unless response.code == 200
+      response.data['user_id_list']['string'].map {|x| User.from_id(x) }
     end
 
     def user_location(user)
-      resp = query('alipay.mobile.public.gis.get',
-                   JSON.generate({ :userId => user.id }))
-      OpenStruct.new(resp)
+      response = query('alipay.mobile.public.gis.get',
+                       JSON.generate(:userId => user.id))
+      OpenStruct.new(response)
     end
 
-
-    private
-
-    def query(service, content)
-      client.request(service, content)
+    def download_media(media)
+      query('alipay.mobile.public.multimedia.download',
+            JSON.generate(:mediaId => media.id),
+            :gateway => BLOB_GATEWAY) { |response| response.body }
     end
+
   end
 end
