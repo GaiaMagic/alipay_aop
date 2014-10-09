@@ -1,110 +1,52 @@
-require 'rest-client'
+require 'openssl'
+require 'rest_client'
+require 'ostruct'
 
-require 'json'
-
-require_relative 'server_key'
-require_relative 'client_key'
-require_relative 'support'
-
-
-module AlipayAOP
-  ALIPAY_GATEWAY = 'https://openapi.alipay.com/gateway.do'
-
+module AlipayAop
   class Client
-    include Support
+    attr_reader :gateway
 
-    attr_accessor :app_id,
-                  :charset,
-                  :sign_type,
-                  :version,
-                  :client_key,
-                  :server_key
+    def initialize(app_id, gateway, private_key_file, public_key_file)
+      @app_id = app_id
+      @gateway = gateway
 
-    def initialize(params)
-      settings = {
-        :charset   => :GBK,
-        :sign_type => :RSA,
-        :version   => '1.0'
-      }.merge(params)
+      @alipay_key = OpenSSL::PKey::RSA.new(File.read(public_key_file))
+      @private_key = OpenSSL::PKey::RSA.new(File.read(private_key_file))
+      @public_key  = @private_key.public_key
 
-      settings.each do |k, v|
-        instance_variable_set("@#{k.to_s}", v)
-      end
-
-      validate_client
-    end
-
-    def configure
-      yield self if block_given?
-    end
-
-    def request(method, body = {})
-      biz_content = body.to_json.to_s
-      biz_content = biz_content.encode(@charset,
-                                       :invalid => :replace,
-                                       :undef   => :replace)
-
-      request_params = basic_prams.merge {
-        :method      => method
-        :biz_content => biz_content,
-        :sign        => sign_content(method, biz_content)
-      }
-
-      response = RestClient.post(URI::encode(ALIPAY_GATEWAY),
-                                 request_params)
-
-      response
-    end
-
-    def create(path, options)
-      alipay_class = class_from_path(path)
-      alipay_class.new(options).tap do |data|
-        data.client = self
-      end
+      @digest = OpenSSL::Digest::SHA1.new
     end
 
 
+    def request(service, content, options = {})
+      parameters = construct_parameters(service, content)
 
-    private
+      resp = RestClient.post(options[:gateway] || @gateway, parameters)
+
+      raise "request failed, response code #{resp.code}" unless resp.code == 200
+
+      return (yield resp) if block_given?
+
+      json_resp = JSON.parse(resp.body)
+      OpenStruct.new(json_resp["#{service.gsub('.', '_')}_response"])
+    end
+
+    def construct_params(service, content)
+      parameters = basic_params
+      parameters.merge!(:biz_content => content,
+                        :sign => sign(content),
+                        :method => service)
+      parameters
+    end
 
     def basic_params
       {
-        :app_id    => @app_id,
-        :charset   => @charset,
-        :version   => @version,
-        :sign_type => @sign_type,
-        :timestamp => timestamp
+        :app_id => @app_id,
+        :charset => 'GBK',
+        :timestamp => Time.now.strftime('%Y-%m-%d %H:%m:%S'),
+        :version => '1.0'
+        # missing: method, biz_content, sign
       }
     end
-
-    def timestamp
-      Time.now.strftime("%Y-%m-%d %H:%M:%S")
-    end
-
-    def sign_content(method, biz_content)
-      params = basic_params.merge {
-        :biz_content => biz_content,
-        :method => method,
-      }
-
-      message = params.to_a.sort.map {|(k,v)| "#{k.to_s}=#{v.to_s}"}
-                                .join('&')
-
-      @client_key.sign(message)
-    end
-
-    def validate_client
-      [:app_id,
-       :charset,
-       :sign_type,
-       :version,
-       :client_key,
-       :server_key
-      ].all {|x| instance_variable_present?(x) } or
-        raise AlipayAOP::Error.new('Some parameter(s) ' +
-                                   'is required but not ' +
-                                   'supplied.')
-    end
-
   end
 end

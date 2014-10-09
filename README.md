@@ -39,6 +39,12 @@ TODO
 TODO
 
 
+## Acknowledgement
+
+* [skinnyworm/wechat-rails](https://github.com/skinnyworm/wechat-rails)
+the design of api largely referred to wechat-rails.
+
+
 ## Contributing
 
 1. Fork it
