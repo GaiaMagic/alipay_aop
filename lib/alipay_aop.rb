@@ -17,9 +17,9 @@ module AlipayAOP
 
   def self.configure
     config_file = Rails.root.join("config/alipay_aop.yml")
-    @config ||= if defined? Rails and File.exist?(config_file)
-                  OpenStruct.new(YAML.load(File.read(config_file))[Rails.env])
-                end
+    @config = if defined? Rails and File.exist?(config_file)
+                OpenStruct.new(YAML.load(File.read(config_file))[Rails.env])
+              end
 
     yield @config if block_given?
     @config

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="GBK"?>
+<alipay>
+    <response>
+        <XML>
+            <ToUserId><![CDATA[<%= @request.to_user.id %>]]></ToUserId>
+            <AppId><![CDATA[<%= @request.app_id %>]]></AppId>
+            <CreateTime><%= @request.create_time.to_i %></CreateTime>
+            <MsgType><![CDATA[ack]]></MsgType>
+        </XML>
+    </response>
+    <sign><%= @signature %></sign>
+    <sign_type>RSA</sign_type>
+</alipay>

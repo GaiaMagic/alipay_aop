@@ -1,17 +1,18 @@
 require 'alipay_aop/user'
 require 'alipay_aop/media'
+require 'alipay_aop/reply'
 
 module AlipayAOP
   class Request
     attr_reader :biz_content_raw,
-                :sign,
+                :signature,
                 :service
 
 
     def initialize(post_params)
       @service = post_params['service']
       @biz_content_raw = post_params['biz_content']
-      @sign = post_params['sign']
+      @signature = post_params['sign']
       set_up_content
     end
 
@@ -37,6 +38,10 @@ module AlipayAOP
           define_getter(key, v)
         end
       end
+    end
+
+    def reply
+      Reply.new(self)
     end
 
 

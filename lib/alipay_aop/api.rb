@@ -15,7 +15,10 @@ module AlipayAOP
                 :client,
                 :app_id
 
-    def_delegator :client, :request, :query
+    def_delegator  :client, :request, :query
+    def_delegators :client, :public_key,
+                            :sign,
+                            :verify
 
 
     def initialize(app_id, private_key_file, alipay_public_key_file)
@@ -61,6 +64,8 @@ module AlipayAOP
                        JSON.generate(:userId => user.id))
       OpenStruct.new(response)
     end
+
+
 
     def download_media(media)
       query('alipay.mobile.public.multimedia.download',

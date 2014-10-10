@@ -44,23 +44,42 @@ module AlipayAOP
       end
 
       return matched if matched
-      return responders.first unless responders.empty?
 
-      fallbacks = self.responders(:fallback)
-      return fallbacks.first unless fallbacks.empty?
+      if responders.empty?
+        fallbacks = self.responders(:fallback)
+        return fallbacks.first unless fallbacks.empty?
+      else
+        responder_class = responders.detect {|x| x[:with].nil? }
+        return responder_class.first unless responder_class.empty?
+      end
 
       raise 'no responder matched for the request'
     end
 
-    def self.invoke_responder(responder, request)
-      if responder[:respond].present?
-        return AlipayAOP.api.send_message(responder[:respond])
+    def self.handle_verifygw_event
+      on :event, :with => :verifygw do
+        @biz_content = api.public_key
+        @signature = sign(@biz_content)
+        render :verifygw
       end
+    end
 
-      return responder[:proc].call(request) if responder[:proc].present?
 
-      # just do nothing if no proc or respond specified
-      nil
+
+    def invoke_responder(responder)
+      if responder[:respond].present?
+        AlipayAOP.api.send_message(responder[:respond])
+      elsif responder[:proc].present?
+        responder[:proc].call(@request)
+      else
+        # just do nothing if no proc or respond specified
+        nil
+      end
+    end
+
+    def acknowledge_request
+      @signature = api.sign(@request.biz_content_raw)
+      render :acknowledge
     end
 
 
@@ -70,15 +89,19 @@ module AlipayAOP
 
       begin
         responder = self.class.responder_for(@request)
-        self.invoke_responder(responder, @request)
+        invoke_responder(responder)
       rescue => e
         # exception has to be muted to reply the server,
         # better to log the error messages
       end
 
-      # TODO: acknowledge the server that the message has been received
+      acknowledge_request
     end
 
+
+    def api
+      AlipayAOP.api
+    end
   end
 end
 
@@ -86,7 +109,7 @@ end
 
 if defined? ActionController::Base
   class ActionController::Base
-    def self.wechat_responder
+    def self.alipay_aop_responder
       send :include, AlipayAOP::Responder
     end
   end

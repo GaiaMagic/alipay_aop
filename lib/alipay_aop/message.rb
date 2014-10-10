@@ -19,6 +19,19 @@ module AlipayAOP
       new(msg['toUserId'], msg['msgType'], params)
     end
 
+    def self.new_text(content, to_user = nil)
+      new(nil, :text, :content => content)
+    end
+
+    def self.new_image_text(attrs, to_user = nil)
+      new(nil, :image_text, :articles => [Article.new(attrs)])
+    end
+
+    def self.new_multiple_image_text(multi_attrs, to_user = nil)
+      new(nil,
+          :image_text,
+          :articles => multi_attrs.map { |attr| Article.new(attr) })
+    end
 
     attr_accessor :to_user,
                   :type,

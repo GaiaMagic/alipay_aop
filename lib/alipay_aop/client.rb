@@ -6,6 +6,8 @@ module AlipayAop
   class Client
     attr_reader :gateway
 
+    CHARSET = 'GBK'
+
     def initialize(app_id, gateway, private_key_file, public_key_file)
       @app_id = app_id
       @gateway = gateway
@@ -31,9 +33,24 @@ module AlipayAop
       OpenStruct.new(json_resp["#{service.gsub('.', '_')}_response"])
     end
 
+
+    def sign(message)
+      Base64.encode64(@private_key.sign(@digest, message))
+    end
+
+    def verify(message, signature)
+      @alipay_key.verify(@digest, Base64.decode64(signature), message)
+    end
+
+    def public_key
+      @public_key_export ||= @public_key.to_pem.lines[1..-2].map(&:chomp).join
+    end
+
+    private
+
     def construct_params(service, content)
       parameters = basic_params
-      parameters.merge!(:biz_content => content,
+      parameters.merge!(:biz_content => content.encode(CHARSET),
                         :sign => sign(content),
                         :method => service)
       parameters
@@ -42,11 +59,11 @@ module AlipayAop
     def basic_params
       {
         :app_id => @app_id,
-        :charset => 'GBK',
+        :charset => CHARSET,
         :timestamp => Time.now.strftime('%Y-%m-%d %H:%m:%S'),
         :version => '1.0'
-        # missing: method, biz_content, sign
       }
     end
+
   end
 end

@@ -5,11 +5,11 @@ require 'alipay_aop/version'
 
 Gem::Specification.new do |spec|
   spec.name          = "alipay_aop"
-  spec.version       = AlipayAop::VERSION
-  spec.authors       = ["Hung Yuhei", "Shou Ya"]
-  spec.email         = ["kongruxi@gmail.com", "shouyatf@gmail.com"]
-  spec.description   = %q{An unofficial API wrapper for Alipay Service Platform}
-  spec.summary       = %q{An unofficial API wrapper for Alipay Service Platform}
+  spec.version       = AlipayAOP::VERSION
+  spec.authors       = ["Shou Ya"]
+  spec.email         = ["shouyatf@gmail.com"]
+  spec.description   = %q{An unofficial API wrapper for Alipay Open Platform}
+  spec.summary       = %q{An unofficial API wrapper for Alipay Open Platform}
   spec.homepage      = ""
   spec.license       = "MIT"
 
@@ -22,5 +22,4 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake"
   spec.add_development_dependency "rspec"
   spec.add_development_dependency "activesupport"
-  spec.add_development_dependency "actioncontroller"
 end
